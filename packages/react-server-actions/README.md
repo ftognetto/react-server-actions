@@ -9,20 +9,64 @@ React Server Actions represent a groundbreaking advancement in how we handle ser
 React Server Actions was born out of the need to address these gaps in the implementation of React's new server actions feature. Rather than replacing the native functionality, this library builds upon it by providing a structured approach to server actions. The core idea is to establish a well-defined shape for server action responses, making them predictable and easier to work with.
 
 ```typescript
+export const zodSchema = z.object({
+    name: z.string().min(1),
+    ...
+})
+```
 
+```typescript
+'use server';
+export const someAction = action(zodSchema, async (data) => {
+  // data is already validated and is typed
+  // the action wrapper will take care of validate data and will wrap the response into a ActionResult type
+  return {
+    something: 'whatever',
+  };
+});
 ```
 
 By providing this structure, the library enables developers to create more robust client-side components that can confidently interact with server actions. It combines the power of Zod for server-side validation with native HTML validation attributes, creating a seamless development experience while maintaining type safety throughout the application. The result is a more organized and maintainable codebase that follows best practices for handling server-client interactions.
 
+```typescript
+'use client'
+export default function Form() {
+    const [state, action, pending] = useActionState(someAction, initialState());
+
+    console.log(state.formData?.name); // state will be always of type ActionResult
+    console.log(state.invalid?.name); // it will contain the data and eventually the validation problems
+
+    return (
+        <Form state={state} action={action} schema={schema}>
+            <FormField
+                name="name"
+                render={(field) => (
+                <div>
+                    <label htmlFor={field.input.id} className={field.invalid ? 'text-red-500' : ''}>Name</label>
+                    <input {...field.input} type="text"  />
+                    {field.invalid && <p className="text-red-500">{field.invalid}</p>}
+                </div>
+                )}
+            />
+        </Form>
+    );
+}
+```
+
+```typescript
+// The ActionResult type
+export type ActionResult<Schema> = {
+    success: boolean;
+    formData: z.infer<Schema> | undefined; // Data submitted
+    successData: any; // Data returned from the user
+    invalid: [key in keyof Partial<z.TypeOf<Schema>>]: string[] | undefined; // Validation fields
+    error: string | undefined;
+}
+```
+
 ## Features
 
 ### Server-Side Features
-
-#### Direct React Server Actions Integration
-
-- Seamlessly works with Next.js and React Server Actions
-- No additional server-side middleware required
-- Type-safe action handling
 
 #### Structured Action Responses
 
@@ -45,7 +89,7 @@ By providing this structure, the library enables developers to create more robus
 
 #### Form State Management
 
-- Optional form data persistence between submissions
+- Form data persistence between submissions
 - Ability to reset form data after successful submission
 - State management utilities for handling loading and error states
 
@@ -53,56 +97,119 @@ By providing this structure, the library enables developers to create more robus
 
 #### Framework Agnostic
 
+- Use React standard hook useActionState
 - Works with any form management library of your choice
 - Native support for React Hook Form, Formik, or plain HTML forms
 - Zero client-side dependencies required
 
 #### Native HTML Validation
 
-- Automatic HTML5 validation attributes from Zod schemas
+- Automatic HTML5 validation attributes inferred from Zod schemas
 - Client-side validation before server submission
 - Improved user experience with instant feedback
 - Accessibility-friendly validation messages
 
 ## Installation
 
-bash
-npm install next-native-actions
+```bash
+npm install react-server-actions
+```
 
 ## Basic Usage
 
 ### 1. Define your schema and action
 
-typescript:next-native-actions/README.md
+Define your zod schema and create a server action. The server action must be wrapped into the `action` method to be sure that it will return a correct `ActionResult` type.
+
+```typescript
 import { z } from 'zod';
-import { createAction } from 'next-native-actions';
 const userSchema = z.object({
-name: z.string().min(2),
-email: z.string().email(),
-age: z.number().min(18)
+  name: z.string().min(2),
+  email: z.string().email(),
+  age: z.number().min(18),
 });
-export const createUser = createAction(userSchema, async (data) => {
-// Your server logic here
-return { success: true, data };
+```
+
+```typescript
+import { userSchema } from './schema';
+import { action } from 'react-server-actions';
+export const createUser = action(userSchema, async (data) => {
+  // Your server logic here
+  return { success: true, data };
 });
+```
 
 ### 2. Use in your form component
 
-typescript
-'use client';
-import { useAction } from 'next-native-actions/client';
-export function UserForm() {
-const { action, isLoading } = useAction(createUser);
-return (
+Connect the server action with the React hook `useStateAction`.
+For having a correct initial data we provide a `initialState` method
+After that you will have a typed `state` with all the informations about data submitted and validation state.
 
-<form action={action}>
-<input name="name" type="text" required minLength={2} />
-<input name="email" type="email" required />
-<input name="age" type="number" required min={18} />
-<button disabled={isLoading}>Submit</button>
-</form>
-);
+```typescript
+'use client';
+import { useActionState } from 'react';
+import { createUser } from './action';
+import { initialState } from 'react-server-actions';
+export function UserForm() {
+    const [state, action, pending] = useActionState(createUser, initialData({
+        // can be an object that satisfies userSchema or undefined
+        ...
+    }));
+    ...
 }
+```
+
+### 3. Define the form
+
+You can now create the form with native `<form>` or with any other library, taking advantage of having a structured and typed `state`.
+This library will, anyway, provide two useful component:
+
+- `<Form>` component - it will provide the ability to reset the form on successful submission, define a `onSuccess` and `onError` callback
+- `<FormField>` component - it will provide a render method, which will expose a `field` property with the correct informations to build your inputs. **It will also inject the HTML5 validation rule based on the zod schema**!
+  - Inside the `render` method of the `<FormField>` component you can use whatever ui library you want.
+  - The `field` property will have this structure
+    ```typescript
+        {
+            invalid: string[] | undefined;
+            value: any;
+            input: {
+                id: string;
+                name: string;
+                'aria-invalid': boolean;
+                autoComplete: 'on' | 'off' | undefined;
+                defaultValue?: string;
+                ...html5ValidationRules (like required, min, etc...)
+            }
+        }
+    ```
+
+```typescript
+'use client';
+import { useActionState } from 'react';
+import { createUser } from './action'
+export function UserForm() {
+    const [state, action, pending] = useActionState(createUser);
+    return (
+        <Form state={state} action={action} schema={userSchema}>
+
+            <FormField
+                name="name"
+                render={(field) => (
+                    <div>
+                        <label htmlFor={field.input.id} className={field.invalid ? 'text-red-500' : ''}>
+                        Name
+                        </label>
+                        <input {...field.input} type="text" />
+                        {field.invalid && <p className="text-red-500">{field.invalid}</p>}
+                    </div>
+                )}
+            />
+
+            <button type="submit" disabled={pending}>Save</button>
+        </Form>
+    );
+}
+```
 
 ## Advanced Features
 
