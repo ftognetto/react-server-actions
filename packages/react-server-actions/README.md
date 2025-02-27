@@ -1,6 +1,18 @@
-# Next Native Actions
+# React Server Actions
 
-A lightweight library for handling form actions in Next.js applications using native browser capabilities and server actions.
+A lightweight library for handling server actions in React and Next.js applications using server side zod validation and native html client side validation.
+
+## Intro
+
+React Server Actions represent a groundbreaking advancement in how we handle server-side operations in React applications. However, while the APIs provided by the React team are powerful, developers often face challenges in establishing consistent patterns for handling responses, validation, and error management. This is where this library comes in.
+
+React Server Actions was born out of the need to address these gaps in the implementation of React's new server actions feature. Rather than replacing the native functionality, this library builds upon it by providing a structured approach to server actions. The core idea is to establish a well-defined shape for server action responses, making them predictable and easier to work with.
+
+```typescript
+
+```
+
+By providing this structure, the library enables developers to create more robust client-side components that can confidently interact with server actions. It combines the power of Zod for server-side validation with native HTML validation attributes, creating a seamless development experience while maintaining type safety throughout the application. The result is a more organized and maintainable codebase that follows best practices for handling server-client interactions.
 
 ## Features
 
@@ -110,6 +122,7 @@ resolver: zodResolver(userSchema)
 }
 
 ### datetime-local input type
+
 TODO: Explain how to use it
 
 ### Error Handling
