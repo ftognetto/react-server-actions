@@ -109,7 +109,6 @@ resolver: zodResolver(userSchema)
 // ... rest of your form implementation
 }
 
-
 ### Error Handling
 
 typescript
@@ -128,12 +127,13 @@ return (
 ## Caveats
 
 ### datetime-local input type
+
 TODO: Explain how to use it
 
 ### select defaultValue
+
 In react 19 there is an open issue https://github.com/facebook/react/issues/30580 that prevents the defaultValue to correctly set the select value.
 According to this comment https://github.com/facebook/react/issues/30580#issuecomment-2537962675 there is a workaround by setting the 'key' attribute of the select
-
 
 ## Best Practices
 
