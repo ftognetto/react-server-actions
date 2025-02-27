@@ -4,7 +4,6 @@ import React, { useEffect, useRef } from 'react';
 import { z } from 'zod';
 import type { ActionResult } from '../index.js';
 import {
-  datetimeToInputDefaultValue,
   dateToInputDefaultValue,
   getZodValidationAttributes,
 } from './helpers.js';
@@ -24,47 +23,68 @@ const useForm = <Schema extends z.AnyZodObject>() => {
   };
 };
 
-const FieldContext = React.createContext<{ name: string }>({ name: '' });
+const FieldContext = React.createContext<{ name: string; id: string }>({
+  name: '',
+  id: '',
+});
 
-export const useField = <Schema extends z.AnyZodObject>() => {
+type UseFieldReturn = {
+  invalid: string[] | undefined;
+  value: any;
+  input: {
+    id: string;
+    name: string;
+    //type?: string;
+    'aria-invalid': boolean;
+    autoComplete: 'on' | 'off' | undefined;
+    defaultValue?: string;
+    defaultChecked?: boolean;
+  };
+};
+export const useField = <Schema extends z.AnyZodObject>(): UseFieldReturn => {
   'use no memo'; // the useField hook should not be memoized because the value will change
-  const { name } = React.useContext(FieldContext);
+  const { name, id } = React.useContext(FieldContext);
   const { state, schema } = useForm<Schema>();
 
   if (!state || !schema)
     throw new Error('<FormField> must be used within a <Form>');
 
-  const id = React.useId();
-
   // Get validation attributes from schema
-  const validationAttrs = getZodValidationAttributes(schema, [name as string]);
-  let defaultValue = state.formData?.[name];
-  if (validationAttrs.type === 'date') {
-    defaultValue = defaultValue
-      ? dateToInputDefaultValue(defaultValue)
-      : undefined;
-  }
-  if (
-    validationAttrs.type === 'datetime-local' &&
-    defaultValue instanceof Date
-  ) {
-    defaultValue = defaultValue
-      ? datetimeToInputDefaultValue(defaultValue)
-      : undefined;
-  }
+  const { type, attrs } = getZodValidationAttributes(schema, [name as string]);
 
-  return {
+  // Create the field object
+  const field: UseFieldReturn = {
     invalid: state.invalid?.[name],
     value: state.formData?.[name],
     input: {
       id: id,
       name: name as string,
-      defaultValue: defaultValue,
-      defaultChecked: defaultValue,
       'aria-invalid': !!state.invalid?.[name],
-      ...validationAttrs,
+      autoComplete: undefined,
+      ...attrs,
     },
   };
+
+  // Set the default value for mantaining the state across submissions
+  let defaultValue = state.formData?.[name];
+  if (defaultValue && defaultValue instanceof Date) {
+    defaultValue = dateToInputDefaultValue(defaultValue);
+  }
+  if (type === 'enum') {
+    field.input.defaultValue = defaultValue;
+    // TODO: This is not working if the input is a radio
+    // if the input is a radio, we don't know which of the inputs is this one
+  } else if (type === 'boolean') {
+    field.input.defaultChecked = defaultValue;
+  } else {
+    field.input.defaultValue = defaultValue;
+  }
+  // Set autocomplete for string inputs
+  if (type === 'string') {
+    field.input.autoComplete = 'on';
+  }
+  console.log(field);
+  return field;
 };
 
 export function Form<Schema extends z.AnyZodObject>({
@@ -119,8 +139,9 @@ export function FormField<Schema extends z.AnyZodObject>({
   render: (field: ReturnType<typeof useField>) => React.ReactNode;
   name: keyof z.TypeOf<Schema>;
 }) {
+  const id = React.useId();
   return (
-    <FieldContext.Provider value={{ name: name as string }}>
+    <FieldContext.Provider value={{ name: name as string, id }}>
       <FormFieldRenderer render={render} />
     </FieldContext.Provider>
   );

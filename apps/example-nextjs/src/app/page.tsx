@@ -1,9 +1,15 @@
-import ExampleForm from '@/app/form';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function Home() {
   return (
-    <div className="flex items-center my-12 max-w-2xl px-4 mx-auto">
-      <ExampleForm />
-    </div>
+    <>
+      <Button asChild>
+        <Link href="/html-form">HTML Form</Link>
+      </Button>
+      <Button asChild>
+        <Link href="/shadcn-form">Shadcn Form</Link>
+      </Button>
+    </>
   );
 }

@@ -1,17 +1,36 @@
 import { z } from 'zod';
 
+/**
+ * Get the html5 validation attributes from a Zod schema field
+ * @param schema - The Zod schema
+ * @param path - The path to the field in the schema
+ * @returns The validation attributes for the field
+ * @note It would be cool to infer also the "type" attribute of the field, but this would not be consistent because a zod rule is not a 1-1 relation with an html input.
+ *       For example, a zod.number() could be an <input type="number" /> but also a <select>. A z.date() could be represented by a <input type="date" /> but also a <input type="datetime-local" />.
+ *       We could make a "guess" based on the zod rule, and then could be overriden by the user, but this would lead to confusion.
+ *       So we leave it as a parameter for now.
+ */
 export function getZodValidationAttributes(
   schema: z.ZodTypeAny,
   path: string[],
-): Record<string, string | number | boolean> {
+  options?: {
+    inferTypeAttr?: boolean;
+  },
+): {
+  type: 'string' | 'number' | 'date' | 'boolean' | 'enum';
+  attrs: Record<string, string | number | boolean>;
+} {
   const def = schema._def;
+  let type: 'string' | 'number' | 'date' | 'boolean' | 'enum' = 'string';
   const attrs: Record<string, string | number | boolean> = {};
 
   // First handle object type to get to the actual field
   if (def.typeName === 'ZodObject' && path.length > 0) {
     const shape = def.shape();
     const field = shape[path[0] as keyof typeof shape];
-    return field ? getZodValidationAttributes(field, path.slice(1)) : {};
+    return field
+      ? getZodValidationAttributes(field, path.slice(1))
+      : { type, attrs };
   }
 
   // Now we're at the actual field, check if it's optional/nullable
@@ -21,7 +40,7 @@ export function getZodValidationAttributes(
   // If it's an optional/nullable type, get attributes from the inner type but don't set required
   if (isOptionalType || isNullableType) {
     const innerAttrs = getZodValidationAttributes(def.innerType, path);
-    delete innerAttrs.required;
+    delete innerAttrs.attrs.required;
     return innerAttrs;
   }
 
@@ -29,6 +48,7 @@ export function getZodValidationAttributes(
   attrs.required = true;
 
   if (def.typeName === 'ZodString') {
+    type = 'string';
     attrs.type = 'text';
     if (def.checks) {
       for (const check of def.checks) {
@@ -52,6 +72,7 @@ export function getZodValidationAttributes(
     def.typeName === 'ZodNumber' ||
     (def.typeName === 'ZodCoerce' && def.schema._def.typeName === 'ZodNumber')
   ) {
+    type = 'number';
     attrs.type = 'number';
     if (def.checks || (def.schema && def.schema._def.checks)) {
       const checks = def.checks || def.schema._def.checks;
@@ -73,6 +94,7 @@ export function getZodValidationAttributes(
     def.typeName === 'ZodDate' ||
     (def.typeName === 'ZodCoerce' && def.schema._def.typeName === 'ZodDate')
   ) {
+    type = 'date';
     attrs.type = 'date';
     if (def.checks || (def.schema && def.schema._def.checks)) {
       const checks = def.checks || def.schema._def.checks;
@@ -91,18 +113,43 @@ export function getZodValidationAttributes(
     def.typeName === 'ZodBoolean' ||
     (def.typeName === 'ZodCoerce' && def.schema._def.typeName === 'ZodBoolean')
   ) {
+    type = 'boolean';
     attrs.type = 'checkbox';
   }
 
-  return attrs;
+  if (
+    def.typeName === 'ZodEnum' ||
+    (def.typeName === 'ZodCoerce' && def.schema._def.typeName === 'ZodEnum')
+  ) {
+    type = 'enum';
+    attrs.type = 'radio';
+  }
+
+  // If not specified, remove the type attribute
+  if (!options?.inferTypeAttr) {
+    delete attrs.type;
+  }
+
+  return { type, attrs };
 }
 
+/**
+ * Convert a date to an <input type="date"> default value
+ * @param date - The date to convert
+ * @returns The input default value
+ */
 export const dateToInputDefaultValue = (date: Date) => {
   const newDate = date ? new Date(date) : new Date();
   return new Date(newDate.getTime() - newDate.getTimezoneOffset() * 60000)
     .toISOString()
     .split('T')[0];
 };
+
+/**
+ * Convert a date to an <input type="datetime-local"> default value
+ * @param date - The date to convert
+ * @returns The input default value
+ */
 export const datetimeToInputDefaultValue = (date: Date) => {
   const newDate = date ? new Date(date) : new Date();
   return new Date(newDate.getTime() - newDate.getTimezoneOffset() * 60000)

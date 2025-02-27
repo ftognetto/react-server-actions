@@ -7,6 +7,8 @@ export const schema = z.object({
   birthDate: z.coerce.date(),
   birthDateTime: z.coerce.date(),
   age: z.coerce.number().min(18),
-  acceptTerms: z.coerce.boolean(),
   gender: z.enum(['male', 'female', 'other']),
+  preferredLanguage: z.enum(['en', 'fr', 'es', 'it']),
+  acceptTerms: z.coerce.boolean(),
+  acceptOptional: z.coerce.boolean().optional(),
 });

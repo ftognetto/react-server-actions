@@ -21,7 +21,7 @@ export default function ExampleForm() {
             <label htmlFor={field.input.id} className={`text-sm font-medium ${field.invalid ? 'text-red-500' : ''}`}>
               Name
             </label>
-            <input {...field.input} className="border border-gray-300 rounded-md p-2 dark:text-gray-800" />
+            <input {...field.input} type="text" className="border border-gray-300 rounded-md p-2 dark:text-gray-800" />
             {field.invalid && <p className="text-red-500">{field.invalid}</p>}
           </div>
         )}
@@ -33,7 +33,7 @@ export default function ExampleForm() {
             <label htmlFor={field.input.id} className={`text-sm font-medium ${field.invalid ? 'text-red-500' : ''}`}>
               Email
             </label>
-            <input {...field.input} className="border border-gray-300 rounded-md p-2 dark:text-gray-800" />
+            <input {...field.input} type="email" className="border border-gray-300 rounded-md p-2 dark:text-gray-800" />
             {field.invalid && <p className="text-red-500">{field.invalid}</p>}
           </div>
         )}
@@ -45,7 +45,7 @@ export default function ExampleForm() {
             <label htmlFor={field.input.id} className={`text-sm font-medium ${field.invalid ? 'text-red-500' : ''}`}>
               Password
             </label>
-            <input {...field.input} className="border border-gray-300 rounded-md p-2 dark:text-gray-800" />
+            <input {...field.input} type="password" className="border border-gray-300 rounded-md p-2 dark:text-gray-800" />
             {field.invalid && <p className="text-red-500">{field.invalid}</p>}
           </div>
         )}
@@ -57,7 +57,7 @@ export default function ExampleForm() {
             <label htmlFor={field.input.id} className={`text-sm font-medium ${field.invalid ? 'text-red-500' : ''}`}>
               Birth Date
             </label>
-            <input {...field.input} className="border border-gray-300 rounded-md p-2 dark:text-gray-800" />
+            <input {...field.input} type="date" className="border border-gray-300 rounded-md p-2 dark:text-gray-800" />
             {field.invalid && <p className="text-red-500">{field.invalid}</p>}
           </div>
         )}
@@ -72,6 +72,7 @@ export default function ExampleForm() {
             <input
               {...field.input}
               type="datetime-local"
+              // For <input type="datetime-local">, the default value is not in the form yyyy-MM-ddTHH:mm so we need to convert it
               defaultValue={field.value ? datetimeToInputDefaultValue(field.value) : ''}
               className="border border-gray-300 rounded-md p-2 dark:text-gray-800"
             />
@@ -86,7 +87,75 @@ export default function ExampleForm() {
             <label htmlFor={field.input.id} className={`text-sm font-medium ${field.invalid ? 'text-red-500' : ''}`}>
               Age
             </label>
-            <input {...field.input} className="border border-gray-300 rounded-md p-2 dark:text-gray-800" />
+            <input {...field.input} type="number" className="border border-gray-300 rounded-md p-2 dark:text-gray-800" />
+            {field.invalid && <p className="text-red-500">{field.invalid}</p>}
+          </div>
+        )}
+      />
+      <FormField
+        name="gender"
+        render={(field) => (
+          <div className="flex flex-col space-y-2">
+            <label className={`text-sm font-medium ${field.invalid ? 'text-red-500' : ''}`}>Gender</label>
+            <div className="flex items-center gap-2">
+              <label htmlFor={field.input.id + '-male'} className={`text-sm font-medium ${field.invalid ? 'text-red-500' : ''}`}>
+                Male
+              </label>
+              <input
+                {...field.input}
+                id={field.input.id + '-male'}
+                // For <input type="radio">, the default value is not in the form value so we need to set it manually
+                defaultChecked={field.value === 'male'}
+                type="radio"
+                defaultValue="male"
+                className="border border-gray-300 rounded-md p-2 dark:text-gray-800"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor={field.input.id + '-female'} className={`text-sm font-medium ${field.invalid ? 'text-red-500' : ''}`}>
+                Female
+              </label>
+              <input
+                {...field.input}
+                id={field.input.id + '-female'}
+                // For <input type="radio">, the default value is not in the form value so we need to set it manually
+                defaultChecked={field.value === 'female'}
+                type="radio"
+                defaultValue="female"
+                className="border border-gray-300 rounded-md p-2 dark:text-gray-800"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor={field.input.id + '-other'} className={`text-sm font-medium ${field.invalid ? 'text-red-500' : ''}`}>
+                Other
+              </label>
+              <input
+                {...field.input}
+                id={field.input.id + '-other'}
+                // For <input type="radio">, the default value is not in the form value so we need to set it manually
+                defaultChecked={field.value === 'other'}
+                type="radio"
+                defaultValue="other"
+                className="border border-gray-300 rounded-md p-2 dark:text-gray-800"
+              />
+            </div>
+            {field.invalid && <p className="text-red-500">{field.invalid}</p>}
+          </div>
+        )}
+      />
+      <FormField
+        name="preferredLanguage"
+        render={(field) => (
+          <div className="flex flex-col space-y-2">
+            <label htmlFor={field.input.id} className={`text-sm font-medium ${field.invalid ? 'text-red-500' : ''}`}>
+              Preferred Language
+            </label>
+            <select {...field.input} key={field.input.defaultValue} className="border border-gray-300 rounded-md p-2 dark:text-gray-800">
+              <option value="en">English</option>
+              <option value="fr">French</option>
+              <option value="es">Spanish</option>
+              <option value="it">Italian</option>
+            </select>
             {field.invalid && <p className="text-red-500">{field.invalid}</p>}
           </div>
         )}
@@ -98,7 +167,19 @@ export default function ExampleForm() {
             <label htmlFor={field.input.id} className={`text-sm font-medium ${field.invalid ? 'text-red-500' : ''}`}>
               Accept Terms
             </label>
-            <input {...field.input} className="border border-gray-300 rounded-md p-2 dark:text-gray-800" />
+            <input {...field.input} type="checkbox" className="border border-gray-300 rounded-md p-2 dark:text-gray-800" />
+            {field.invalid && <p className="text-red-500">{field.invalid}</p>}
+          </div>
+        )}
+      />
+      <FormField
+        name="acceptOptional"
+        render={(field) => (
+          <div className="flex flex-col space-y-2">
+            <label htmlFor={field.input.id} className={`text-sm font-medium ${field.invalid ? 'text-red-500' : ''}`}>
+              Accept Optional Terms
+            </label>
+            <input {...field.input} type="checkbox" className="border border-gray-300 rounded-md p-2 dark:text-gray-800" />
             {field.invalid && <p className="text-red-500">{field.invalid}</p>}
           </div>
         )}
