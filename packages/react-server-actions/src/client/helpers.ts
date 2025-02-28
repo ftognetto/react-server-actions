@@ -52,10 +52,10 @@ export function getZodValidationAttributes(
     attrs.type = 'text';
     if (def.checks) {
       for (const check of def.checks) {
-        if (check.kind === 'min') {
+        if (check.kind === 'minlength') {
           attrs.minLength = check.value;
         }
-        if (check.kind === 'max') {
+        if (check.kind === 'maxlength') {
           attrs.maxLength = check.value;
         }
         if (check.kind === 'email') {

@@ -8,6 +8,8 @@ React Server Actions represent a groundbreaking advancement in how we handle ser
 
 React Server Actions was born out of the need to address these gaps in the implementation of React's new server actions feature. Rather than replacing the native functionality, this library builds upon it by providing a structured approach to server actions. The core idea is to establish a well-defined shape for server action responses, making them predictable and easier to work with.
 
+This is how we define a server action with the help of react-server-actions library.
+
 ```typescript
 export const zodSchema = z.object({
     name: z.string().min(1),
@@ -17,9 +19,10 @@ export const zodSchema = z.object({
 
 ```typescript
 'use server';
+
+// the action wrapper will take care of validate data and will wrap the response into a ActionResult type!
 export const someAction = action(zodSchema, async (data) => {
   // data is already validated and is typed
-  // the action wrapper will take care of validate data and will wrap the response into a ActionResult type
   return {
     something: 'whatever',
   };
@@ -217,50 +220,131 @@ export function UserForm() {
 
 The library works seamlessly with popular form management libraries:
 
-typescript
-// With React Hook Form
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-export function UserFormWithRHF() {
-const form = useForm({
-resolver: zodResolver(userSchema)
-});
-// ... rest of your form implementation
+** Docs still missing **
+
+### Build your component around the library
+
+** Docs still missing **
+
+If you want to create your custom components around react-server-action library you can use the provided `useField` hook.
+
+The `<Form>` and `<FormField>` components are providing a context in which you can call the `useField` for getting all the required information about a single field you need to build a component.
+
+For example, we can recreate the standard Shadcn Form components in this way:
+
+```typescript
+"use client";
+
+import { useField } from "@native-actions/client";
+import React from "react";
+
+export function FormLabel({ children }: { children: React.ReactNode }) {
+  const field = useField();
+  return (
+    <label
+      className={`text-sm font-medium leading-none ${field.invalid && "text-destructive"}`}
+      htmlFor={field.input.id}
+    >
+      {children}
+    </label>
+  );
 }
+
+export function FormDescription({ children }: { children: React.ReactNode }) {
+  const field = useField();
+  return (
+    <p
+      id={field.input.id + "-description"}
+      className="text-sm text-muted-foreground"
+    >
+      {children}
+    </p>
+  );
+}
+
+export function FormMessage({ children }: { children?: React.ReactNode }) {
+  const field = useField();
+  const error = field.invalid || children;
+  if (!error) {
+    return null;
+  }
+  return (
+    <p
+      id={field.input.id + "-message"}
+      className={`text-sm font-medium ${error && "text-destructive"}`}
+    >
+      {error}
+    </p>
+  );
+}
+```
+
+And them can use them inside the form for having a better developer experience
+
+```typescript
+export default function ShadcnForm() {
+  const [state, action, pending] = useActionState(formAction, initialState(undefined));
+  return (
+        <Form state={state} action={action} schema={schema} className="space-y-4">
+        <FormField
+            name="name"
+            render={(field) => (
+                <div className="flex flex-col space-y-2">
+                    <FormLabel>Name</FormLabel>
+                    <FormDescription>Insert your name</FormDescription>
+                    <Input {...field.input} />
+                    <FormMessage />
+                </div>
+            )}
+        />
+        ...
+        </Form>
+    );
+}
+```
 
 ### Error Handling
 
-typescript
+In the `ActionResult` object there is an `error` property exposed. This property will be sent back only in case of an error during the action execution.
+You can handle this error state in several ways
+
+```typescript
 'use client';
+import { useActionState } from 'react';
+import { createUser } from './action'
 export function UserForm() {
-const { action, isLoading, error } = useAction(createUser);
-return (
+    const [state, action, pending] = useActionState(createUser);
+    useEffect(() => {
+        // You can subscribe to state variable
+        if (state.error) {
+            console.log(state.error);
+        }
+    }, [state]);
+    return (
+        <Form state={state} action={action} schema={userSchema} onError={(err) => {
+            // You can use the <Form> onError callback
+            toast.error(err);
+        }}>
+            // You can render some component if state error is present
+            {state.error && <p>An error occurred: {state.error}</p>}
+            <FormField
+                name="name"
+                render={(field) => (
+                    <div>
+                        <label htmlFor={field.input.id} className={field.invalid ? 'text-red-500' : ''}>
+                        Name
+                        </label>
+                        <input {...field.input} type="text" />
+                        {field.invalid && <p className="text-red-500">{field.invalid}</p>}
+                    </div>
+                )}
+            />
 
-<form action={action}>
-{error && <div className="error">{error.message}</div>}
-{/ form fields /}
-</form>
-);
+            <button type="submit" disabled={pending}>Save</button>
+        </Form>
+    );
 }
-
-## Caveats
-
-### datetime-local input type
-
-TODO: Explain how to use it
-
-### select defaultValue
-
-In react 19 there is an open issue https://github.com/facebook/react/issues/30580 that prevents the defaultValue to correctly set the select value.
-According to this comment https://github.com/facebook/react/issues/30580#issuecomment-2537962675 there is a workaround by setting the 'key' attribute of the select
-
-## Best Practices
-
-1. Always define your schemas in a separate file for better reusability
-2. Use type inference from your schemas for better type safety
-3. Implement proper error handling both on client and server
-4. Consider using progressive enhancement for better user experience
-5. Follow accessibility guidelines when displaying validation messages
+```
 
 ## TypeScript Support
 
@@ -270,6 +354,46 @@ The library is written in TypeScript and provides full type safety:
 - Type-safe action responses
 - Proper error typing
 - IDE autocompletion support
+
+## Caveats
+
+### datetime-local input type
+
+In the standard html (as the time of writing) we have two kinds of date input
+
+- `<input type="date">` which represent a yyyy-MM-dd date
+- `<input type="datetime-local">` which represent a yyyy-MM-ddTHH:mm
+  Since from a zod rule like `z.coerce.date()` we cannot know if the user is using a `<input type="date">` or `<input type="datetime-local">` we are, by default, assuming you are using a type="date" field.
+  So, inside the `render` method of the `<FormField>` component, we are returning a yyyy-MM-dd formatted string inside the `field.input.defaultValue`
+
+So this will work
+
+```typescript
+<FormField
+    name="dateField"
+    render={(field) => (
+        <input {...field.input} type="date" />
+    )}
+/>
+```
+
+Instead for working with `datetime-local` inputs we are exposing a helper method to retrieve the defaultValue to assing to the input to be sure that we will not loose the field state across submits
+
+```typescript
+import { datetimeToInputDefaultValue } from 'react-server-actions';
+...
+<FormField
+    name="dateField"
+    render={(field) => (
+        <input {...field.input} type="datetime-local" defaultValue={field.value ? datetimeToInputDefaultValue(field.value) : ''} />
+    )}
+/>
+```
+
+### select defaultValue
+
+In react 19 there is an open issue https://github.com/facebook/react/issues/30580 that prevents the defaultValue to correctly set the select value.
+According to this comment https://github.com/facebook/react/issues/30580#issuecomment-2537962675 there is a workaround by setting the 'key' attribute of the select.
 
 ## Contributing
 
