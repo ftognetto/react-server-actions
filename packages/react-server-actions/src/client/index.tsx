@@ -75,7 +75,11 @@ export const useField = <Schema extends z.AnyZodObject>(): UseFieldReturn => {
     // TODO: This is not working if the input is a radio
     // if the input is a radio, we don't know which of the inputs is this one
   } else if (type === 'boolean') {
-    field.input.defaultChecked = defaultValue;
+    if (defaultValue) {
+      field.input.defaultChecked = defaultValue;
+    } else {
+      field.input.defaultChecked = false;
+    }
   } else {
     field.input.defaultValue = defaultValue;
   }
@@ -83,7 +87,6 @@ export const useField = <Schema extends z.AnyZodObject>(): UseFieldReturn => {
   if (type === 'string') {
     field.input.autoComplete = 'on';
   }
-  console.log(field);
   return field;
 };
 
