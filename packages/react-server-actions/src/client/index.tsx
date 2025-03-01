@@ -11,15 +11,17 @@ import {
 const FormContext = React.createContext<{
   state?: ActionResult<z.AnyZodObject>;
   schema?: z.AnyZodObject;
-}>({ state: undefined, schema: undefined });
+  debug?: boolean;
+}>({ state: undefined, schema: undefined, debug: false });
 
 export const useForm = <Schema extends z.AnyZodObject>() => {
   const context = React.useContext(FormContext);
   if (!context.state || !context.schema)
-    return { state: undefined, schema: undefined };
+    return { state: undefined, schema: undefined, debug: false };
   return {
     state: context.state as ActionResult<Schema>,
     schema: context.schema as Schema,
+    debug: context.debug,
   };
 };
 
@@ -44,7 +46,7 @@ type UseFieldReturn = {
 export const useField = <Schema extends z.AnyZodObject>(): UseFieldReturn => {
   'use no memo'; // the useField hook should not be memoized because the value will change
   const { name, id } = React.useContext(FieldContext);
-  const { state, schema } = useForm<Schema>();
+  const { state, schema, debug } = useForm<Schema>();
 
   if (!state || !schema)
     throw new Error('<FormField> must be used within a <Form>');
@@ -87,6 +89,9 @@ export const useField = <Schema extends z.AnyZodObject>(): UseFieldReturn => {
   if (type === 'string') {
     field.input.autoComplete = 'on';
   }
+  if (debug) {
+    console.log(field);
+  }
   return field;
 };
 
@@ -99,6 +104,7 @@ export function Form<Schema extends z.AnyZodObject>({
   reset,
   onSuccess,
   onError,
+  debug,
 }: {
   children: React.ReactNode;
   action: (payload: FormData) => void;
@@ -111,6 +117,7 @@ export function Form<Schema extends z.AnyZodObject>({
     formData: z.TypeOf<Schema> | undefined,
   ) => void;
   onError?: (error: string) => void;
+  debug?: boolean;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   if (reset !== false) {
@@ -127,7 +134,7 @@ export function Form<Schema extends z.AnyZodObject>({
   }, [state, onSuccess, onError]);
 
   return (
-    <FormContext.Provider value={{ state, schema }}>
+    <FormContext.Provider value={{ state, schema, debug }}>
       <form action={action} ref={formRef} className={className}>
         {children}
       </form>
