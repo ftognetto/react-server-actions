@@ -13,7 +13,7 @@ const FormContext = React.createContext<{
   schema?: z.AnyZodObject;
 }>({ state: undefined, schema: undefined });
 
-const useForm = <Schema extends z.AnyZodObject>() => {
+export const useForm = <Schema extends z.AnyZodObject>() => {
   const context = React.useContext(FormContext);
   if (!context.state || !context.schema)
     return { state: undefined, schema: undefined };

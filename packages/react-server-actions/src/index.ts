@@ -2,7 +2,7 @@ import {
   dateToInputDefaultValue,
   datetimeToInputDefaultValue,
 } from './client/helpers.js';
-import { Form, FormField, useField } from './client/index.js';
+import { Form, FormField, useField, useForm } from './client/index.js';
 import { action, actionWithParam } from './server/actions.js';
 import { initialState, setInvalid } from './server/helpers.js';
 import {
@@ -23,6 +23,7 @@ export {
   initialState,
   setInvalid,
   useField,
+  useForm,
 };
 export type {
   ActionResult,
