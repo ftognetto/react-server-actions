@@ -137,8 +137,9 @@ const userSchema = z.object({
 import { userSchema } from './schema';
 import { action } from 'react-server-actions';
 export const createUser = action(userSchema, async (data) => {
-  // Your server logic here
-  return { success: true, data };
+  // Your server logic here...
+  // Then return whatever you want, also void. The action wrapper will wrap your response into an ActionResult object
+  return { message: 'Cool!' };
 });
 ```
 
