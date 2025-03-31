@@ -45,13 +45,25 @@ export function getZodValidationAttributes(
   }
 
   // Set required by default for non-optional/nullable fields
-  attrs.required = true;
+  // Skip required attribute if the field has a default value
+  if (!def.defaultValue) {
+    attrs.required = true;
+  }
 
-  if (def.typeName === 'ZodString') {
+  const typeName =
+    def.typeName === 'ZodDefault'
+      ? def.innerType._def.typeName
+      : def.typeName === 'ZodCoerce'
+        ? def.schema._def.typeName
+        : def.typeName;
+
+  if (typeName === 'ZodString') {
     type = 'string';
     attrs.type = 'text';
-    if (def.checks) {
-      for (const check of def.checks) {
+    const checks =
+      def.typeName === 'ZodDefault' ? def.innerType._def.checks : def.checks;
+    if (checks) {
+      for (const check of checks) {
         if (check.kind === 'minlength' || check.kind === 'min') {
           attrs.minLength = check.value;
         }
@@ -66,16 +78,16 @@ export function getZodValidationAttributes(
         }
       }
     }
-  }
-
-  if (
-    def.typeName === 'ZodNumber' ||
-    (def.typeName === 'ZodCoerce' && def.schema._def.typeName === 'ZodNumber')
-  ) {
+  } else if (typeName === 'ZodNumber') {
     type = 'number';
     attrs.type = 'number';
-    if (def.checks || (def.schema && def.schema._def.checks)) {
-      const checks = def.checks || def.schema._def.checks;
+    const checks =
+      def.typeName === 'ZodDefault'
+        ? def.innerType._def.checks
+        : def.typeName === 'ZodCoerce'
+          ? def.schema._def.checks
+          : def.checks;
+    if (checks) {
       for (const check of checks) {
         if (check.kind === 'min') {
           attrs.min = check.value;
@@ -88,16 +100,16 @@ export function getZodValidationAttributes(
         }
       }
     }
-  }
-
-  if (
-    def.typeName === 'ZodDate' ||
-    (def.typeName === 'ZodCoerce' && def.schema._def.typeName === 'ZodDate')
-  ) {
+  } else if (typeName === 'ZodDate') {
     type = 'date';
     attrs.type = 'date';
-    if (def.checks || (def.schema && def.schema._def.checks)) {
-      const checks = def.checks || def.schema._def.checks;
+    const checks =
+      def.typeName === 'ZodDefault'
+        ? def.innerType._def.checks
+        : def.typeName === 'ZodCoerce'
+          ? def.schema._def.checks
+          : def.checks;
+    if (checks) {
       for (const check of checks) {
         if (check.kind === 'min') {
           const minDate = new Date(check.value).toISOString().split('T')[0];
@@ -113,20 +125,10 @@ export function getZodValidationAttributes(
         }
       }
     }
-  }
-
-  if (
-    def.typeName === 'ZodBoolean' ||
-    (def.typeName === 'ZodCoerce' && def.schema._def.typeName === 'ZodBoolean')
-  ) {
+  } else if (typeName === 'ZodBoolean') {
     type = 'boolean';
     attrs.type = 'checkbox';
-  }
-
-  if (
-    def.typeName === 'ZodEnum' ||
-    (def.typeName === 'ZodCoerce' && def.schema._def.typeName === 'ZodEnum')
-  ) {
+  } else if (typeName === 'ZodEnum') {
     type = 'enum';
     attrs.type = 'radio';
   }

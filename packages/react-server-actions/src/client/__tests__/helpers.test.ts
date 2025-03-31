@@ -353,4 +353,116 @@ describe('getZodValidationAttributes', () => {
       });
     });
   });
+
+  describe('Fields with default values', () => {
+    it('should not mark string with default as required', () => {
+      const schema = z.object({
+        name: z.string().default('Anonymous'),
+      });
+      const result = getZodValidationAttributes(schema, ['name']);
+      expect(result).toEqual({
+        type: 'string',
+        attrs: {},
+      });
+    });
+
+    it('should not mark number with default as required', () => {
+      const schema = z.object({
+        count: z.number().default(0),
+      });
+      const result = getZodValidationAttributes(schema, ['count'], {
+        inferTypeAttr: true,
+      });
+      expect(result).toEqual({
+        type: 'number',
+        attrs: {
+          type: 'number',
+        },
+      });
+    });
+
+    it('should not mark boolean with default as required', () => {
+      const schema = z.object({
+        isEnabled: z.boolean().default(false),
+      });
+      const result = getZodValidationAttributes(schema, ['isEnabled'], {
+        inferTypeAttr: true,
+      });
+      expect(result).toEqual({
+        type: 'boolean',
+        attrs: {
+          type: 'checkbox',
+        },
+      });
+    });
+
+    it('should handle default value with other validations', () => {
+      const schema = z.object({
+        age: z.number().min(0).max(120).default(18),
+      });
+      const result = getZodValidationAttributes(schema, ['age'], {
+        inferTypeAttr: true,
+      });
+      expect(result).toEqual({
+        type: 'number',
+        attrs: {
+          type: 'number',
+          min: 0,
+          max: 120,
+        },
+      });
+    });
+
+    it('should handle string with default and validation', () => {
+      const schema = z.object({
+        username: z.string().min(3).max(20).default('user123'),
+      });
+      const result = getZodValidationAttributes(schema, ['username']);
+      expect(result).toEqual({
+        type: 'string',
+        attrs: {
+          minLength: 3,
+          maxLength: 20,
+        },
+      });
+    });
+
+    it('should handle date with default and validation', () => {
+      const minDate = new Date('2023-01-01');
+      const maxDate = new Date('2023-12-31');
+      const schema = z.object({
+        eventDate: z
+          .date()
+          .min(minDate)
+          .max(maxDate)
+          .default(new Date('2023-06-15')),
+      });
+      const result = getZodValidationAttributes(schema, ['eventDate'], {
+        inferTypeAttr: true,
+      });
+      expect(result).toEqual({
+        type: 'date',
+        attrs: {
+          type: 'date',
+          min: '2023-01-01',
+          max: '2023-12-31',
+        },
+      });
+    });
+
+    it('should handle enum with default', () => {
+      const schema = z.object({
+        role: z.enum(['admin', 'user', 'guest']).default('user'),
+      });
+      const result = getZodValidationAttributes(schema, ['role'], {
+        inferTypeAttr: true,
+      });
+      expect(result).toEqual({
+        type: 'enum',
+        attrs: {
+          type: 'radio',
+        },
+      });
+    });
+  });
 });
