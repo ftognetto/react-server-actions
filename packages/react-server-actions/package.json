@@ -35,7 +35,8 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.17.4",
     "prettier": "^3.3.3",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^3.1.1"
   },
   "peerDependencies": {
     "@types/react": ">=18.0.0",

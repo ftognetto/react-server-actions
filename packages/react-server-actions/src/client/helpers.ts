@@ -29,7 +29,7 @@ export function getZodValidationAttributes(
     const shape = def.shape();
     const field = shape[path[0] as keyof typeof shape];
     return field
-      ? getZodValidationAttributes(field, path.slice(1))
+      ? getZodValidationAttributes(field, path.slice(1), options)
       : { type, attrs };
   }
 
@@ -39,7 +39,7 @@ export function getZodValidationAttributes(
 
   // If it's an optional/nullable type, get attributes from the inner type but don't set required
   if (isOptionalType || isNullableType) {
-    const innerAttrs = getZodValidationAttributes(def.innerType, path);
+    const innerAttrs = getZodValidationAttributes(def.innerType, path, options);
     delete innerAttrs.attrs.required;
     return innerAttrs;
   }
@@ -52,10 +52,10 @@ export function getZodValidationAttributes(
     attrs.type = 'text';
     if (def.checks) {
       for (const check of def.checks) {
-        if (check.kind === 'minlength') {
+        if (check.kind === 'minlength' || check.kind === 'min') {
           attrs.minLength = check.value;
         }
-        if (check.kind === 'maxlength') {
+        if (check.kind === 'maxlength' || check.kind === 'max') {
           attrs.maxLength = check.value;
         }
         if (check.kind === 'email') {
@@ -100,10 +100,16 @@ export function getZodValidationAttributes(
       const checks = def.checks || def.schema._def.checks;
       for (const check of checks) {
         if (check.kind === 'min') {
-          attrs.min = check.value.toISOString().split('T')[0];
+          const minDate = new Date(check.value).toISOString().split('T')[0];
+          if (minDate) {
+            attrs.min = minDate;
+          }
         }
         if (check.kind === 'max') {
-          attrs.max = check.value.toISOString().split('T')[0];
+          const maxDate = new Date(check.value).toISOString().split('T')[0];
+          if (maxDate) {
+            attrs.max = maxDate;
+          }
         }
       }
     }
