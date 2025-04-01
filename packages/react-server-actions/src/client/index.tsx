@@ -106,7 +106,7 @@ export function Form<Schema extends z.AnyZodObject>({
   onError,
   debug,
   ...props
-}: {
+}: React.ComponentProps<'form'> & {
   children: React.ReactNode;
   action: (payload: FormData) => void;
   state: ActionResult<Schema>;
@@ -119,7 +119,6 @@ export function Form<Schema extends z.AnyZodObject>({
   ) => void;
   onError?: (error: string) => void;
   debug?: boolean;
-  props?: React.HTMLAttributes<HTMLFormElement>;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   if (reset !== false) {
