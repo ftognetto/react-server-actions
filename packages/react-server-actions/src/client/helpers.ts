@@ -32,6 +32,9 @@ export function getZodValidationAttributes(
       ? getZodValidationAttributes(field, path.slice(1), options)
       : { type, attrs };
   }
+  if (def.typeName === 'ZodEffects') {
+    return getZodValidationAttributes(def.schema, path, options);
+  }
 
   // Now we're at the actual field, check if it's optional/nullable
   const isOptionalType = schema instanceof z.ZodOptional;

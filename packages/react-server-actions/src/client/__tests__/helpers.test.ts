@@ -465,4 +465,20 @@ describe('getZodValidationAttributes', () => {
       });
     });
   });
+
+  describe('Edge cases', () => {
+    it('property with optional and transform', () => {
+      const schema = z.object({
+        name: z
+          .string()
+          .optional()
+          .transform((val) => val?.trim()),
+      });
+      const result = getZodValidationAttributes(schema, ['name']);
+      expect(result).toEqual({
+        type: 'string',
+        attrs: {},
+      });
+    });
+  });
 });
