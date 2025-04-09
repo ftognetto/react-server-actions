@@ -44,7 +44,7 @@ export const error = <Schema extends z.ZodTypeAny>(
     error: error instanceof Error ? error.message : JSON.stringify(error),
   }) satisfies ErrorActionResult<Schema>;
 
-export function setInvalid<Schema extends z.ZodTypeAny>(
+export function actionInvalid<Schema extends z.ZodTypeAny>(
   formData: z.infer<Schema>,
   field: keyof z.TypeOf<Schema>,
   error: string,
@@ -60,6 +60,19 @@ export function setInvalid<Schema extends z.ZodTypeAny>(
   } satisfies InvalidActionResult<Schema>;
 }
 
+export function actionError<Schema extends z.ZodTypeAny>(
+  formData: z.infer<Schema>,
+  error: string,
+) {
+  return {
+    invalid: undefined,
+    success: false,
+    error: error,
+    formData, // pass down the data even if there are errors to leave the form filled
+    successData: undefined,
+  } satisfies ErrorActionResult<Schema>;
+}
+
 // ** Action result typeguards
 export const isFailureActionResult = <Schema extends z.ZodTypeAny>(
   actionResult: unknown,
@@ -71,6 +84,19 @@ export const isFailureActionResult = <Schema extends z.ZodTypeAny>(
     actionResult.success === false &&
     'invalid' in actionResult &&
     actionResult.invalid !== undefined
+  );
+};
+
+export const isErrorActionResult = <Schema extends z.ZodTypeAny>(
+  actionResult: unknown,
+): actionResult is ErrorActionResult<Schema> => {
+  return (
+    typeof actionResult === 'object' &&
+    actionResult !== null &&
+    'success' in actionResult &&
+    actionResult.success === false &&
+    'error' in actionResult &&
+    actionResult.error !== undefined
   );
 };
 

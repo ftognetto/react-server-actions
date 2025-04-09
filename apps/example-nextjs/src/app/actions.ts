@@ -1,12 +1,12 @@
 'use server';
 import { schema } from '@/app/schema';
-import { action, setInvalid } from 'react-server-actions';
-
+import { ActionClient, actionInvalid } from 'react-server-actions';
+const actionClient = new ActionClient({ handleError: true });
 // Wrap any action in the action function to validate data and make sure we are returning an [ActionResult] response
-export const formAction = action(schema, async (data) => {
+export const formAction = actionClient.action(schema, async ({ data }) => {
   console.log(data);
   if (data.name.indexOf('a') >= 0) {
-    return setInvalid(data, 'name', 'Name cannot contain "a"');
+    return actionInvalid(data, 'name', 'Name cannot contain "a"');
   }
   // Simulate a slow operation
   await new Promise((resolve) => setTimeout(resolve, 1000));

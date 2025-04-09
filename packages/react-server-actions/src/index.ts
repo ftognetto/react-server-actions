@@ -3,8 +3,8 @@ import {
   datetimeToInputDefaultValue,
 } from './client/helpers.js';
 import { Form, FormField, useField, useForm } from './client/index.js';
-import { action, actionWithParam } from './server/actions.js';
-import { initialState, setInvalid } from './server/helpers.js';
+import { ActionClient } from './server/actions.js';
+import { actionError, actionInvalid, initialState } from './server/helpers.js';
 import {
   type ActionResult,
   type ErrorActionResult,
@@ -14,14 +14,14 @@ import {
   type SuccessActionResult,
 } from './server/types.js';
 export {
+  ActionClient,
   Form,
   FormField,
-  action,
-  actionWithParam,
+  actionError,
+  actionInvalid,
   dateToInputDefaultValue,
   datetimeToInputDefaultValue,
   initialState,
-  setInvalid,
   useField,
   useForm,
 };
