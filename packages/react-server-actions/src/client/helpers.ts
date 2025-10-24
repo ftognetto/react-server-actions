@@ -11,7 +11,7 @@ import { z } from 'zod';
  *       So we leave it as a parameter for now.
  */
 export function getZodValidationAttributes(
-  schema: z.ZodTypeAny,
+  schema: z.ZodType<any>,
   path: string[],
   options?: {
     inferTypeAttr?: boolean;
@@ -20,20 +20,22 @@ export function getZodValidationAttributes(
   type: 'string' | 'number' | 'date' | 'boolean' | 'enum';
   attrs: Record<string, string | number | boolean>;
 } {
-  const def = schema._def;
   let type: 'string' | 'number' | 'date' | 'boolean' | 'enum' = 'string';
   const attrs: Record<string, string | number | boolean> = {};
 
   // First handle object type to get to the actual field
-  if (def.typeName === 'ZodObject' && path.length > 0) {
-    const shape = def.shape();
+  if (schema instanceof z.ZodObject && path.length > 0) {
+    const shape = schema.shape;
     const field = shape[path[0] as keyof typeof shape];
     return field
       ? getZodValidationAttributes(field, path.slice(1), options)
       : { type, attrs };
   }
-  if (def.typeName === 'ZodEffects') {
-    return getZodValidationAttributes(def.schema, path, options);
+  if (schema instanceof z.ZodTransform) {
+    return getZodValidationAttributes((schema._def as any).in, path, options);
+  }
+  if (schema instanceof z.ZodPipe) {
+    return getZodValidationAttributes((schema._def as any).in, path, options);
   }
 
   // Now we're at the actual field, check if it's optional/nullable
@@ -42,96 +44,102 @@ export function getZodValidationAttributes(
 
   // If it's an optional/nullable type, get attributes from the inner type but don't set required
   if (isOptionalType || isNullableType) {
-    const innerAttrs = getZodValidationAttributes(def.innerType, path, options);
+    const innerSchema = (schema as any)._def.innerType;
+    const innerAttrs = getZodValidationAttributes(innerSchema, path, options);
     delete innerAttrs.attrs.required;
     return innerAttrs;
   }
 
-  // Set required by default for non-optional/nullable fields
-  // Skip required attribute if the field has a default value
-  if (!def.defaultValue) {
+  // Handle default values - if it's a ZodDefault, get the inner type and don't set required
+  let actualSchema = schema;
+  if (schema instanceof z.ZodDefault) {
+    actualSchema = (schema as any)._def.innerType;
+    // Don't set required for fields with default values
+  } else {
     attrs.required = true;
   }
 
-  const typeName =
-    def.typeName === 'ZodDefault'
-      ? def.innerType._def.typeName
-      : def.typeName === 'ZodCoerce'
-        ? def.schema._def.typeName
-        : def.typeName;
-
-  if (typeName === 'ZodString') {
+  if (actualSchema instanceof z.ZodString) {
     type = 'string';
     attrs.type = 'text';
-    const checks =
-      def.typeName === 'ZodDefault' ? def.innerType._def.checks : def.checks;
+    // Access checks through the schema's internal structure
+    const checks = (actualSchema as any)._def?.checks;
     if (checks) {
       for (const check of checks) {
-        if (check.kind === 'minlength' || check.kind === 'min') {
-          attrs.minLength = check.value;
-        }
-        if (check.kind === 'maxlength' || check.kind === 'max') {
-          attrs.maxLength = check.value;
-        }
-        if (check.kind === 'email') {
-          attrs.type = 'email';
-        }
-        if (check.kind === 'url') {
-          attrs.type = 'url';
+        const checkDef = check._zod?.def;
+        if (checkDef) {
+          if (checkDef.check === 'min_length') {
+            attrs.minLength = checkDef.minimum;
+          }
+          if (checkDef.check === 'max_length') {
+            attrs.maxLength = checkDef.maximum;
+          }
+          if (checkDef.format === 'email') {
+            attrs.type = 'email';
+          }
+          if (checkDef.format === 'url') {
+            attrs.type = 'url';
+          }
         }
       }
     }
-  } else if (typeName === 'ZodNumber') {
+  } else if (actualSchema instanceof z.ZodNumber) {
     type = 'number';
     attrs.type = 'number';
-    const checks =
-      def.typeName === 'ZodDefault'
-        ? def.innerType._def.checks
-        : def.typeName === 'ZodCoerce'
-          ? def.schema._def.checks
-          : def.checks;
+    const checks = (actualSchema as any)._def?.checks;
     if (checks) {
       for (const check of checks) {
-        if (check.kind === 'min') {
-          attrs.min = check.value;
-        }
-        if (check.kind === 'max') {
-          attrs.max = check.value;
-        }
-        if (check.kind === 'int') {
-          attrs.step = 1;
+        const checkDef = check._zod?.def;
+        if (checkDef) {
+          if (checkDef.check === 'greater_than' && checkDef.inclusive) {
+            attrs.min = checkDef.value;
+          }
+          if (checkDef.check === 'less_than' && checkDef.inclusive) {
+            attrs.max = checkDef.value;
+          }
+          if (checkDef.check === 'greater_than' && !checkDef.inclusive) {
+            attrs.min = checkDef.value + 1;
+          }
+          if (checkDef.check === 'less_than' && !checkDef.inclusive) {
+            attrs.max = checkDef.value - 1;
+          }
+          if (checkDef.format === 'safeint') {
+            attrs.step = 1;
+          }
         }
       }
     }
-  } else if (typeName === 'ZodDate') {
+  } else if (actualSchema instanceof z.ZodDate) {
     type = 'date';
     attrs.type = 'date';
-    const checks =
-      def.typeName === 'ZodDefault'
-        ? def.innerType._def.checks
-        : def.typeName === 'ZodCoerce'
-          ? def.schema._def.checks
-          : def.checks;
+    const checks = (actualSchema as any)._def?.checks;
     if (checks) {
       for (const check of checks) {
-        if (check.kind === 'min') {
-          const minDate = new Date(check.value).toISOString().split('T')[0];
-          if (minDate) {
-            attrs.min = minDate;
+        const checkDef = check._zod?.def;
+        if (checkDef) {
+          if (checkDef.check === 'greater_than' && checkDef.inclusive) {
+            const minDate = new Date(checkDef.value)
+              .toISOString()
+              .split('T')[0];
+            if (minDate) {
+              attrs.min = minDate;
+            }
           }
-        }
-        if (check.kind === 'max') {
-          const maxDate = new Date(check.value).toISOString().split('T')[0];
-          if (maxDate) {
-            attrs.max = maxDate;
+          if (checkDef.check === 'less_than' && checkDef.inclusive) {
+            const maxDate = new Date(checkDef.value)
+              .toISOString()
+              .split('T')[0];
+            if (maxDate) {
+              attrs.max = maxDate;
+            }
           }
         }
       }
     }
-  } else if (typeName === 'ZodBoolean') {
+  } else if (actualSchema instanceof z.ZodBoolean) {
     type = 'boolean';
     attrs.type = 'checkbox';
-  } else if (typeName === 'ZodEnum') {
+  } else if (actualSchema instanceof z.ZodEnum) {
     type = 'enum';
     attrs.type = 'radio';
   }

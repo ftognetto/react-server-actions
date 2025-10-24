@@ -4,32 +4,33 @@ import {
 } from './client/helpers.js';
 import { Form, FormField, useField, useForm } from './client/index.js';
 import { ActionClient } from './server/actions.js';
-import { actionError, actionInvalid, initialState } from './server/helpers.js';
+import { error, initialState, invalid, success } from './server/helpers.js';
 import {
-  type ActionResult,
-  type ErrorActionResult,
+  type ActionResultWithFormData,
+  type ErrorActionResultWithFormData,
   type FieldErrors,
-  type IdleActionResult,
-  type InvalidActionResult,
-  type SuccessActionResult,
+  type IdleActionResultWithFormData,
+  type InvalidActionResultWithFormData,
+  type SuccessActionResultWithFormData,
 } from './server/types.js';
 export {
   ActionClient,
   Form,
   FormField,
-  actionError,
-  actionInvalid,
   dateToInputDefaultValue,
   datetimeToInputDefaultValue,
+  error,
   initialState,
+  invalid,
+  success,
   useField,
   useForm,
 };
 export type {
-  ActionResult,
-  ErrorActionResult,
+  ActionResultWithFormData,
+  ErrorActionResultWithFormData,
   FieldErrors,
-  IdleActionResult,
-  InvalidActionResult,
-  SuccessActionResult,
+  IdleActionResultWithFormData,
+  InvalidActionResultWithFormData,
+  SuccessActionResultWithFormData,
 };

@@ -109,7 +109,7 @@ describe('getZodValidationAttributes', () => {
         attrs: {
           required: true,
           type: 'number',
-          min: 0,
+          min: 1,
         },
       });
     });

@@ -2,24 +2,24 @@
 
 import React, { useEffect, useRef } from 'react';
 import { z } from 'zod';
-import type { ActionResult } from '../index.js';
+import type { ActionResultWithFormData } from '../index.js';
 import {
   dateToInputDefaultValue,
   getZodValidationAttributes,
 } from './helpers.js';
 
 const FormContext = React.createContext<{
-  state?: ActionResult<z.AnyZodObject>;
-  schema?: z.AnyZodObject;
+  state?: ActionResultWithFormData<z.ZodObject>;
+  schema?: z.ZodObject;
   debug?: boolean;
 }>({ state: undefined, schema: undefined, debug: false });
 
-export const useForm = <Schema extends z.AnyZodObject>() => {
+export const useForm = <Schema extends z.ZodObject>() => {
   const context = React.useContext(FormContext);
   if (!context.state || !context.schema)
     return { state: undefined, schema: undefined, debug: false };
   return {
-    state: context.state as ActionResult<Schema>,
+    state: context.state as ActionResultWithFormData<Schema>,
     schema: context.schema as Schema,
     debug: context.debug,
   };
@@ -43,7 +43,7 @@ type UseFieldReturn = {
     defaultChecked?: boolean;
   };
 };
-export const useField = <Schema extends z.AnyZodObject>(): UseFieldReturn => {
+export const useField = <Schema extends z.ZodObject>(): UseFieldReturn => {
   'use no memo'; // the useField hook should not be memoized because the value will change
   const { name, id } = React.useContext(FieldContext);
   const { state, schema, debug } = useForm<Schema>();
@@ -73,17 +73,17 @@ export const useField = <Schema extends z.AnyZodObject>(): UseFieldReturn => {
     defaultValue = dateToInputDefaultValue(defaultValue);
   }
   if (type === 'enum') {
-    field.input.defaultValue = defaultValue;
+    field.input.defaultValue = defaultValue as string;
     // TODO: This is not working if the input is a radio
     // if the input is a radio, we don't know which of the inputs is this one
   } else if (type === 'boolean') {
     if (defaultValue) {
-      field.input.defaultChecked = defaultValue;
+      field.input.defaultChecked = defaultValue as boolean;
     } else {
       field.input.defaultChecked = false;
     }
   } else {
-    field.input.defaultValue = defaultValue;
+    field.input.defaultValue = defaultValue as string;
   }
   // Set autocomplete for string inputs
   if (type === 'string') {
@@ -95,7 +95,7 @@ export const useField = <Schema extends z.AnyZodObject>(): UseFieldReturn => {
   return field;
 };
 
-export function Form<Schema extends z.AnyZodObject>({
+export function Form<Schema extends z.ZodObject>({
   children,
   action,
   state,
@@ -109,14 +109,11 @@ export function Form<Schema extends z.AnyZodObject>({
 }: React.ComponentProps<'form'> & {
   children: React.ReactNode;
   action: (payload: FormData) => void;
-  state: ActionResult<Schema>;
+  state: ActionResultWithFormData<Schema>;
   schema: Schema;
   className?: string;
   reset?: boolean;
-  onSuccess?: (
-    successData: any,
-    formData: z.TypeOf<Schema> | undefined,
-  ) => void;
+  onSuccess?: (data: any, formData: z.TypeOf<Schema> | undefined) => void;
   onError?: (error: string) => void;
   debug?: boolean;
 }) {
@@ -128,7 +125,7 @@ export function Form<Schema extends z.AnyZodObject>({
   }
   useEffect(() => {
     if (state.success) {
-      onSuccess?.(state.successData, state.formData);
+      onSuccess?.(state.data, state.formData);
     } else if (state.error) {
       onError?.(state.error);
     }
@@ -143,7 +140,7 @@ export function Form<Schema extends z.AnyZodObject>({
   );
 }
 
-export function FormField<Schema extends z.AnyZodObject>({
+export function FormField<Schema extends z.ZodObject>({
   render,
   name,
 }: {
@@ -158,7 +155,7 @@ export function FormField<Schema extends z.AnyZodObject>({
   );
 }
 
-function FormFieldRenderer<Schema extends z.AnyZodObject>({
+function FormFieldRenderer<Schema extends z.ZodObject>({
   render,
 }: {
   render: (field: ReturnType<typeof useField>) => React.ReactNode;

@@ -1,7 +1,11 @@
 import type { z } from 'zod';
+import type { ConvertEmptyToValue } from './types.js';
 
 // ** Decode form helper
-export const decodeFormData = (formData: FormData): Record<string, any> => {
+export const decodeFormData = (
+  formData: FormData,
+  convertEmptyTo: ConvertEmptyToValue,
+): Record<string, any> => {
   const data: Record<string, any> = {};
   formData.forEach((value, key) => {
     // Reflect.has in favor of: object.hasOwnProperty(key)
@@ -9,7 +13,14 @@ export const decodeFormData = (formData: FormData): Record<string, any> => {
       if (value && value.toString().length) {
         data[key] = value;
       } else {
-        data[key] = undefined;
+        data[key] =
+          convertEmptyTo === 'undefined'
+            ? undefined
+            : convertEmptyTo === 'null'
+              ? null
+              : convertEmptyTo === 'empty-string'
+                ? ''
+                : value;
       }
       return;
     }
@@ -41,5 +52,6 @@ export const decodeFormData = (formData: FormData): Record<string, any> => {
 
   return data;
 };
-export const serialize = <Schema extends z.ZodTypeAny>(data: z.infer<Schema>) =>
-  JSON.parse(JSON.stringify(data));
+export const serialize = <Schema extends z.ZodType<any>>(
+  data: z.infer<Schema>,
+) => JSON.parse(JSON.stringify(data));
