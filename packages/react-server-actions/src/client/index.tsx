@@ -2,14 +2,14 @@
 
 import React, { useEffect, useRef } from 'react';
 import { z } from 'zod';
-import type { ActionResultWithFormData } from '../index.js';
+import type { ActionResult } from '../index.js';
 import {
   dateToInputDefaultValue,
   getZodValidationAttributes,
 } from './helpers.js';
 
 const FormContext = React.createContext<{
-  state?: ActionResultWithFormData<z.ZodObject>;
+  state?: ActionResult<z.ZodObject>;
   schema?: z.ZodObject;
   debug?: boolean;
 }>({ state: undefined, schema: undefined, debug: false });
@@ -19,7 +19,7 @@ export const useForm = <Schema extends z.ZodObject>() => {
   if (!context.state || !context.schema)
     return { state: undefined, schema: undefined, debug: false };
   return {
-    state: context.state as ActionResultWithFormData<Schema>,
+    state: context.state as ActionResult<Schema>,
     schema: context.schema as Schema,
     debug: context.debug,
   };
@@ -82,6 +82,8 @@ export const useField = <Schema extends z.ZodObject>(): UseFieldReturn => {
     } else {
       field.input.defaultChecked = false;
     }
+  } else if (type === 'file') {
+    // File inputs don't support default values, skip setting it
   } else {
     field.input.defaultValue = defaultValue as string;
   }
@@ -109,7 +111,7 @@ export function Form<Schema extends z.ZodObject>({
 }: React.ComponentProps<'form'> & {
   children: React.ReactNode;
   action: (payload: FormData) => void;
-  state: ActionResultWithFormData<Schema>;
+  state: ActionResult<Schema>;
   schema: Schema;
   className?: string;
   reset?: boolean;

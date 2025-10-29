@@ -10,12 +10,12 @@ import {
   isInvalidActionResult,
 } from './helpers.js';
 import {
-  type ActionResultWithFormData,
+  type ActionResult,
   type ConvertEmptyToValue,
-  type ErrorActionResult,
+  type ErrorActionResultWithoutFormData,
   type FieldErrors,
-  type InvalidActionResult,
-  type SuccessActionResult,
+  type InvalidActionResultWithoutFormData,
+  type SuccessActionResultWithoutFormData,
 } from './types.js';
 
 export class ActionClient {
@@ -45,7 +45,9 @@ export class ActionClient {
       data: z.infer<Schema>;
       formData: FormData;
     }) => Promise<
-      SuccessActionResult | InvalidActionResult<Schema> | ErrorActionResult
+      | SuccessActionResultWithoutFormData
+      | InvalidActionResultWithoutFormData<Schema>
+      | ErrorActionResultWithoutFormData
     >,
     options?: {
       handleExceptionsAsFormErrors?: boolean;
@@ -54,7 +56,7 @@ export class ActionClient {
     return async (
       _prevState: unknown,
       data: FormData,
-    ): Promise<ActionResultWithFormData<Schema>> => {
+    ): Promise<ActionResult<Schema>> => {
       const formData = decodeFormData(data, this.convertEmptyTo);
       const parsedData = await schema.safeParseAsync(formData);
       const serializedData = serialize(formData);
@@ -75,19 +77,19 @@ export class ActionClient {
           // Permit to return a InvalidActionResult from the action for custom validations
           return _actionInvalid(
             serializedData,
-            actionResponse as InvalidActionResult<Schema>,
+            actionResponse as InvalidActionResultWithoutFormData<Schema>,
           );
         }
         if (actionResponse && isErrorActionResult(actionResponse)) {
           // Permit to return a ErrorActionResult from the action for custom errors
           return _actionError(
             serializedData,
-            actionResponse as ErrorActionResult,
+            actionResponse as ErrorActionResultWithoutFormData,
           );
         }
         return _actionSuccess(
           serializedData,
-          actionResponse as SuccessActionResult,
+          actionResponse as SuccessActionResultWithoutFormData,
         );
       } catch (e: unknown) {
         if (
@@ -120,7 +122,9 @@ export class ActionClient {
       data: z.infer<Schema>;
       formData: FormData;
     }) => Promise<
-      SuccessActionResult | InvalidActionResult<Schema> | ErrorActionResult
+      | SuccessActionResultWithoutFormData
+      | InvalidActionResultWithoutFormData<Schema>
+      | ErrorActionResultWithoutFormData
     >,
     options?: {
       handleExceptionsAsFormErrors?: boolean;
@@ -130,7 +134,7 @@ export class ActionClient {
       param: string,
       _prevState: unknown,
       data: FormData,
-    ): Promise<ActionResultWithFormData<Schema>> => {
+    ): Promise<ActionResult<Schema>> => {
       const formData = decodeFormData(data, this.convertEmptyTo);
       const parsedData = await schema.safeParseAsync(formData);
       const serializedData = serialize(formData);
@@ -151,18 +155,18 @@ export class ActionClient {
         if (actionResponse && isInvalidActionResult(actionResponse)) {
           return _actionInvalid(
             serializedData,
-            actionResponse as InvalidActionResult<Schema>,
+            actionResponse as InvalidActionResultWithoutFormData<Schema>,
           );
         }
         if (actionResponse && isErrorActionResult(actionResponse)) {
           return _actionError(
             serializedData,
-            actionResponse as ErrorActionResult,
+            actionResponse as ErrorActionResultWithoutFormData,
           );
         }
         return _actionSuccess(
           serializedData,
-          actionResponse as SuccessActionResult,
+          actionResponse as SuccessActionResultWithoutFormData,
         );
       } catch (e: unknown) {
         if (

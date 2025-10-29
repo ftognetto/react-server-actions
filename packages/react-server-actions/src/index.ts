@@ -6,12 +6,12 @@ import { Form, FormField, useField, useForm } from './client/index.js';
 import { ActionClient } from './server/actions.js';
 import { error, initialState, invalid, success } from './server/helpers.js';
 import {
-  type ActionResultWithFormData,
-  type ErrorActionResultWithFormData,
+  type ActionResult,
+  type ErrorActionResult,
   type FieldErrors,
-  type IdleActionResultWithFormData,
-  type InvalidActionResultWithFormData,
-  type SuccessActionResultWithFormData,
+  type IdleActionResult,
+  type InvalidActionResult,
+  type SuccessActionResult,
 } from './server/types.js';
 export {
   ActionClient,
@@ -27,10 +27,10 @@ export {
   useForm,
 };
 export type {
-  ActionResultWithFormData,
-  ErrorActionResultWithFormData,
+  ActionResult,
+  ErrorActionResult,
   FieldErrors,
-  IdleActionResultWithFormData,
-  InvalidActionResultWithFormData,
-  SuccessActionResultWithFormData,
+  IdleActionResult,
+  InvalidActionResult,
+  SuccessActionResult,
 };

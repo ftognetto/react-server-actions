@@ -17,10 +17,11 @@ export function getZodValidationAttributes(
     inferTypeAttr?: boolean;
   },
 ): {
-  type: 'string' | 'number' | 'date' | 'boolean' | 'enum';
+  type: 'string' | 'number' | 'date' | 'boolean' | 'enum' | 'file';
   attrs: Record<string, string | number | boolean>;
 } {
-  let type: 'string' | 'number' | 'date' | 'boolean' | 'enum' = 'string';
+  let type: 'string' | 'number' | 'date' | 'boolean' | 'enum' | 'file' =
+    'string';
   const attrs: Record<string, string | number | boolean> = {};
 
   // First handle object type to get to the actual field
@@ -142,6 +143,9 @@ export function getZodValidationAttributes(
   } else if (actualSchema instanceof z.ZodEnum) {
     type = 'enum';
     attrs.type = 'radio';
+  } else if (actualSchema instanceof z.ZodFile) {
+    type = 'file';
+    attrs.type = 'file';
   }
 
   // If not specified, remove the type attribute
