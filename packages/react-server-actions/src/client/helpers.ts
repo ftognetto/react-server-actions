@@ -35,9 +35,6 @@ export function getZodValidationAttributes(
   if (schema instanceof z.ZodTransform) {
     return getZodValidationAttributes((schema._def as any).in, path, options);
   }
-  if (schema instanceof z.ZodPipe) {
-    return getZodValidationAttributes((schema._def as any).in, path, options);
-  }
 
   // Now we're at the actual field, check if it's optional/nullable
   const isOptionalType = schema instanceof z.ZodOptional;
@@ -58,6 +55,33 @@ export function getZodValidationAttributes(
     // Don't set required for fields with default values
   } else {
     attrs.required = true;
+  }
+
+  // Check if it's a stringbool (ZodPipe with string in and boolean out)
+  // This needs to be checked after unwrapping optional/default but before checking ZodString
+  if (actualSchema instanceof z.ZodPipe) {
+    const pipeDef = (actualSchema as any)._def;
+    const inType = pipeDef.in?.type || pipeDef.in?._def?.type;
+    const outType = pipeDef.out?.type || pipeDef.out?._def?.type;
+
+    // If it's a string to boolean pipe, it's a stringbool
+    if (inType === 'string' && outType === 'boolean') {
+      type = 'boolean';
+      attrs.type = 'checkbox';
+
+      if (!options?.inferTypeAttr) {
+        delete attrs.type;
+      }
+
+      return { type, attrs };
+    }
+
+    // Otherwise, unwrap and continue with inner type
+    return getZodValidationAttributes(
+      (actualSchema._def as any).in,
+      path,
+      options,
+    );
   }
 
   if (actualSchema instanceof z.ZodString) {

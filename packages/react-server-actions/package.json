@@ -1,6 +1,6 @@
 {
   "name": "react-server-actions",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "A package for working with actions in React and Next.js",
   "keywords": [
     "next",

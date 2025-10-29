@@ -212,6 +212,33 @@ describe('getZodValidationAttributes', () => {
         attrs: {},
       });
     });
+
+    it('should handle stringbool', () => {
+      const schema = z.object({
+        isActive: z.stringbool(),
+      });
+      const result = getZodValidationAttributes(schema, ['isActive'], {
+        inferTypeAttr: true,
+      });
+      expect(result).toEqual({
+        type: 'boolean',
+        attrs: {
+          required: true,
+          type: 'checkbox',
+        },
+      });
+    });
+
+    it('should handle optional stringbool', () => {
+      const schema = z.object({
+        subscribe: z.stringbool().optional(),
+      });
+      const result = getZodValidationAttributes(schema, ['subscribe']);
+      expect(result).toEqual({
+        type: 'boolean',
+        attrs: {},
+      });
+    });
   });
 
   describe('Enum validation', () => {
