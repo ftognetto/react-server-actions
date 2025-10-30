@@ -11,4 +11,5 @@ export const schema = z.object({
   preferredLanguage: z.enum(['en', 'fr', 'es', 'it']),
   acceptTerms: z.coerce.boolean(),
   acceptOptional: z.coerce.boolean().optional(),
+  acceptStringBool: z.stringbool(),
 });

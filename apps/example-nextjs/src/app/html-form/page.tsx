@@ -184,10 +184,22 @@ export default function ExampleForm() {
           </div>
         )}
       />
+      <FormField
+        name="acceptStringBool"
+        render={(field) => (
+          <div className="flex flex-col space-y-2">
+            <label htmlFor={field.input.id} className={`text-sm font-medium ${field.invalid ? 'text-red-500' : ''}`}>
+              Accept with .stringbool()
+            </label>
+            <input {...field.input} type="checkbox" className="border border-gray-300 rounded-md p-2 dark:text-gray-800" />
+            {field.invalid && <p className="text-red-500">{field.invalid}</p>}
+          </div>
+        )}
+      />
       {state.success && (
         <div className="space-y-2 border border-green-500 rounded-md p-2">
           <p className="text-green-500">Success response coming from server:</p>
-          <p className="text-green-500">{JSON.stringify(state.successData)}</p>
+          <p className="text-green-500">{JSON.stringify(state.data)}</p>
         </div>
       )}
       {state.error && (

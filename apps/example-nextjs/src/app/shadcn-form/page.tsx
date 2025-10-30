@@ -152,7 +152,7 @@ export default function ShadcnForm() {
       {state.success && (
         <div className="space-y-2 border border-green-500 rounded-md p-2">
           <p className="text-green-500">Success response coming from server:</p>
-          <p className="text-green-500">{JSON.stringify(state.successData)}</p>
+          <p className="text-green-500">{JSON.stringify(state.data)}</p>
         </div>
       )}
       {state.error && (
