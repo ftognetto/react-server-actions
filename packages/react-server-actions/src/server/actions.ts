@@ -21,18 +21,22 @@ import {
 export class ActionClient {
   handleExceptionsAsFormErrors: boolean;
   convertEmptyTo: ConvertEmptyToValue;
+  log: boolean;
 
   constructor(
     options: {
       handleExceptionsAsFormErrors: boolean;
       convertEmptyTo: ConvertEmptyToValue;
+      log: boolean;
     } = {
       handleExceptionsAsFormErrors: true,
       convertEmptyTo: 'undefined',
+      log: false,
     },
   ) {
     this.handleExceptionsAsFormErrors = options.handleExceptionsAsFormErrors;
     this.convertEmptyTo = options.convertEmptyTo;
+    this.log = options.log;
   }
 
   // ** Action wrapper
@@ -57,9 +61,21 @@ export class ActionClient {
       _prevState: unknown,
       data: FormData,
     ): Promise<ActionResult<Schema>> => {
+      if (this.log) {
+        console.log('[react-server-actions] 1 formData', data);
+      }
       const formData = decodeFormData(data, this.convertEmptyTo);
+      if (this.log) {
+        console.log('[react-server-actions] 2 formData decoded', formData);
+      }
       const parsedData = await schema.safeParseAsync(formData);
+      if (this.log) {
+        console.log('[react-server-actions] 3 parsedData', parsedData);
+      }
       const serializedData = serialize(formData);
+      if (this.log) {
+        console.log('[react-server-actions] 4 serializedData', serializedData);
+      }
       if (!parsedData.success) {
         return _actionInvalid(
           serializedData,
@@ -135,9 +151,21 @@ export class ActionClient {
       _prevState: unknown,
       data: FormData,
     ): Promise<ActionResult<Schema>> => {
+      if (this.log) {
+        console.log('[react-server-actions] 1 formData', data);
+      }
       const formData = decodeFormData(data, this.convertEmptyTo);
+      if (this.log) {
+        console.log('[react-server-actions] 2 formData decoded', formData);
+      }
       const parsedData = await schema.safeParseAsync(formData);
+      if (this.log) {
+        console.log('[react-server-actions] 3 parsedData', parsedData);
+      }
       const serializedData = serialize(formData);
+      if (this.log) {
+        console.log('[react-server-actions] 4 serializedData', serializedData);
+      }
       if (!parsedData.success) {
         return _actionInvalid(
           serializedData,
