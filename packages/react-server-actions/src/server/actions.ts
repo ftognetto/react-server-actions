@@ -20,23 +20,29 @@ import {
 
 export class ActionClient {
   handleExceptionsAsFormErrors: boolean;
-  convertEmptyTo: ConvertEmptyToValue;
+  actionConvertEmptyTo: ConvertEmptyToValue;
+  actionWithParamConvertEmptyTo: ConvertEmptyToValue;
   log: boolean;
 
   constructor(
     options: {
-      handleExceptionsAsFormErrors: boolean;
-      convertEmptyTo: ConvertEmptyToValue;
-      log: boolean;
+      handleExceptionsAsFormErrors?: boolean;
+      actionConvertEmptyTo?: ConvertEmptyToValue;
+      actionWithParamConvertEmptyTo?: ConvertEmptyToValue;
+      log?: boolean;
     } = {
       handleExceptionsAsFormErrors: true,
-      convertEmptyTo: 'undefined',
+      actionConvertEmptyTo: 'undefined',
+      actionWithParamConvertEmptyTo: 'undefined',
       log: false,
     },
   ) {
-    this.handleExceptionsAsFormErrors = options.handleExceptionsAsFormErrors;
-    this.convertEmptyTo = options.convertEmptyTo;
-    this.log = options.log;
+    this.handleExceptionsAsFormErrors =
+      options.handleExceptionsAsFormErrors ?? true;
+    this.actionConvertEmptyTo = options.actionConvertEmptyTo ?? 'undefined';
+    this.actionWithParamConvertEmptyTo =
+      options.actionWithParamConvertEmptyTo ?? 'undefined';
+    this.log = options.log ?? false;
   }
 
   // ** Action wrapper
@@ -64,7 +70,7 @@ export class ActionClient {
       if (this.log) {
         console.log('[react-server-actions] 1 formData', data);
       }
-      const formData = decodeFormData(data, this.convertEmptyTo);
+      const formData = decodeFormData(data, this.actionConvertEmptyTo);
       if (this.log) {
         console.log('[react-server-actions] 2 formData decoded', formData);
       }
@@ -154,7 +160,7 @@ export class ActionClient {
       if (this.log) {
         console.log('[react-server-actions] 1 formData', data);
       }
-      const formData = decodeFormData(data, this.convertEmptyTo);
+      const formData = decodeFormData(data, this.actionWithParamConvertEmptyTo);
       if (this.log) {
         console.log('[react-server-actions] 2 formData decoded', formData);
       }
