@@ -86,6 +86,28 @@ export default function ShadcnForm() {
           </div>
         )}
       />
+
+      <FormField
+        name="nested.nestedProperty"
+        render={(field) => (
+          <div className="flex flex-col space-y-2">
+            <FormLabel>Nested Property</FormLabel>
+            <Input {...field.input} />
+            <FormMessage />
+          </div>
+        )}
+      />
+      <FormField
+        name="nested.subNested.subNestedProperty"
+        render={(field) => (
+          <div className="flex flex-col space-y-2">
+            <FormLabel>Sub Nested Property</FormLabel>
+            <Input {...field.input} />
+            <FormMessage />
+          </div>
+        )}
+      />
+
       <FormField
         name="gender"
         render={(field) => (
@@ -145,6 +167,16 @@ export default function ShadcnForm() {
           <div className="flex flex-col space-y-2">
             <FormLabel>Accept Optional Terms</FormLabel>
             <Checkbox {...field.input} defaultChecked={field.value} />
+            <FormMessage />
+          </div>
+        )}
+      />
+      <FormField
+        name="acceptStringBool"
+        render={(field) => (
+          <div className="flex flex-col space-y-2">
+            <FormLabel>Accept with .stringbool()</FormLabel>
+            <Checkbox {...field.input} />
             <FormMessage />
           </div>
         )}

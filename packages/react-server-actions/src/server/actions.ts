@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { decodeFormData, serialize } from './decode_form.js';
+import {
+  decodeFormData,
+  serializeFormData,
+  serializeInvalidResult,
+} from './decode_form.js';
 import {
   _actionError,
   _actionInvalid,
@@ -13,7 +17,6 @@ import {
   type ActionResult,
   type ConvertEmptyToValue,
   type ErrorActionResultWithoutFormData,
-  type FieldErrors,
   type InvalidActionResultWithoutFormData,
   type SuccessActionResultWithoutFormData,
 } from './types.js';
@@ -78,16 +81,18 @@ export class ActionClient {
       if (this.log) {
         console.log('[react-server-actions] 3 parsedData', parsedData);
       }
-      const serializedData = serialize(formData);
+      const serializedData = serializeFormData(formData);
       if (this.log) {
         console.log('[react-server-actions] 4 serializedData', serializedData);
       }
       if (!parsedData.success) {
+        console.log(
+          '[react-server-actions] 5 invalid',
+          serializeInvalidResult(parsedData.error),
+        );
         return _actionInvalid(
           serializedData,
-          invalid<Schema>(
-            parsedData.error.flatten().fieldErrors as FieldErrors<Schema>,
-          ),
+          invalid<Schema>(serializeInvalidResult(parsedData.error)),
         );
       }
       try {
@@ -168,16 +173,14 @@ export class ActionClient {
       if (this.log) {
         console.log('[react-server-actions] 3 parsedData', parsedData);
       }
-      const serializedData = serialize(formData);
+      const serializedData = serializeFormData(formData);
       if (this.log) {
         console.log('[react-server-actions] 4 serializedData', serializedData);
       }
       if (!parsedData.success) {
         return _actionInvalid(
           serializedData,
-          invalid<Schema>(
-            parsedData.error.flatten().fieldErrors as FieldErrors<Schema>,
-          ),
+          invalid<Schema>(serializeInvalidResult(parsedData.error)),
         );
       }
       try {

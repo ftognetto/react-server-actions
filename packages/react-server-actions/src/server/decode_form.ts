@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { ConvertEmptyToValue } from './types.js';
+import type { ConvertEmptyToValue, FieldErrors } from './types.js';
 
 // ** Decode form helper
 export const decodeFormData = (
@@ -52,6 +52,62 @@ export const decodeFormData = (
 
   return data;
 };
-export const serialize = <Schema extends z.ZodType<any>>(
+const isPlainObject = (value: unknown): value is Record<string, any> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const flattenNestedFields = (
+  value: Record<string, any>,
+  prefix = '',
+  acc: Record<string, any> = {},
+) => {
+  for (const [key, nestedValue] of Object.entries(value)) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (isPlainObject(nestedValue)) {
+      flattenNestedFields(nestedValue, path, acc);
+      continue;
+    }
+    acc[path] = nestedValue;
+  }
+  return acc;
+};
+
+export const serializeFormData = <Schema extends z.ZodType<any>>(
   data: z.infer<Schema>,
-) => JSON.parse(JSON.stringify(data));
+) => {
+  const serialized = JSON.parse(JSON.stringify(data));
+  if (!isPlainObject(serialized)) {
+    return serialized;
+  }
+  return flattenNestedFields(serialized);
+};
+
+const aggregateIssuesByPath = (
+  issues: z.ZodIssue[],
+): Record<string, string[]> => {
+  const aggregated: Record<string, string[]> = {};
+
+  for (const issue of issues) {
+    if (!issue.path.length) {
+      // Form-level issues do not have a path; skip until we have a place to store them.
+      continue;
+    }
+
+    const key = issue.path.map(String).join('.');
+    const message = issue.message ?? 'Invalid value';
+
+    if (!aggregated[key]) {
+      aggregated[key] = [];
+    }
+
+    aggregated[key].push(message);
+  }
+
+  return aggregated;
+};
+
+export const serializeInvalidResult = <Schema extends z.ZodType<any>>(
+  error: z.ZodError<z.TypeOf<Schema>>,
+): FieldErrors<Schema> => {
+  const flattened = aggregateIssuesByPath(error.issues);
+  return flattened as FieldErrors<Schema>;
+};

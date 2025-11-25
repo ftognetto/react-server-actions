@@ -3,13 +3,18 @@ import { schema } from '@/app/schema';
 import { ActionClient, invalid, success } from 'react-server-actions';
 const actionClient = new ActionClient({
   handleExceptionsAsFormErrors: true,
-  convertEmptyTo: 'null',
+  actionConvertEmptyTo: 'undefined',
+  actionWithParamConvertEmptyTo: 'null',
+  log: true,
 });
 // Wrap any action in the action function to validate data and make sure we are returning an [ActionResult] response
 export const formAction = actionClient.action(schema, async ({ data }) => {
   console.log(data);
   if (data.name.indexOf('a') >= 0) {
     return invalid({ name: ['Name cannot contain "a"'] });
+  }
+  if (data.nested.nestedProperty.indexOf('a') >= 0) {
+    return invalid({ 'nested.nestedProperty': ['Nested property cannot contain "a"'] });
   }
   // Simulate a slow operation
   await new Promise((resolve) => setTimeout(resolve, 1000));

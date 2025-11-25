@@ -12,4 +12,10 @@ export const schema = z.object({
   acceptTerms: z.coerce.boolean(),
   acceptOptional: z.coerce.boolean().optional(),
   acceptStringBool: z.stringbool(),
+  nested: z.object({
+    nestedProperty: z.string().min(1),
+    subNested: z.object({
+      subNestedProperty: z.string().min(1),
+    }),
+  }),
 });

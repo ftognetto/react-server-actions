@@ -52,16 +52,19 @@ export const useField = <Schema extends z.ZodObject>(): UseFieldReturn => {
     throw new Error('<FormField> must be used within a <Form>');
 
   // Get validation attributes from schema
-  const { type, attrs } = getZodValidationAttributes(schema, [name as string]);
+  const { type, attrs } = getZodValidationAttributes(
+    schema,
+    (name as string).split('.'),
+  );
 
   // Create the field object
   const field: UseFieldReturn = {
-    invalid: state.invalid?.[name],
-    value: state.formData?.[name],
+    invalid: state.invalid?.[name as keyof typeof state.invalid],
+    value: state.formData?.[name as keyof typeof state.formData],
     input: {
       id: id,
       name: name as string,
-      'aria-invalid': !!state.invalid?.[name],
+      'aria-invalid': !!state.invalid?.[name as keyof typeof state.invalid],
       autoComplete: undefined,
       ...attrs,
     },

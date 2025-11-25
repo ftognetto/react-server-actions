@@ -20,7 +20,7 @@ export const success = (data: any) =>
 
 export const invalid = <Schema extends z.ZodType<any>>(
   invalid: FieldErrors<Schema>,
-) =>
+): InvalidActionResultWithoutFormData<Schema> =>
   ({
     success: false,
     invalid,
@@ -53,7 +53,7 @@ export function _actionSuccess<Schema extends z.ZodType<any>>(
 export function _actionInvalid<Schema extends z.ZodType<any>>(
   formData: z.infer<Schema>,
   actionResult: InvalidActionResultWithoutFormData<Schema>,
-) {
+): InvalidActionResult<Schema> {
   return {
     ...actionResult,
     formData, // pass down the data to leave the form filled
