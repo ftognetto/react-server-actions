@@ -123,10 +123,7 @@ export class ActionClient {
           options?.handleExceptionsAsFormErrors ??
           this.handleExceptionsAsFormErrors
         ) {
-          if (
-            e instanceof Error &&
-            (e.message === 'NEXT_REDIRECT' || e.message === 'NEXT_NOT_FOUND')
-          ) {
+          if (this.isNextInternalError(e)) {
             throw e;
           } else {
             return _actionError(serializedData, error(e));
@@ -210,10 +207,7 @@ export class ActionClient {
           options?.handleExceptionsAsFormErrors ??
           this.handleExceptionsAsFormErrors
         ) {
-          if (
-            e instanceof Error &&
-            (e.message === 'NEXT_REDIRECT' || e.message === 'NEXT_NOT_FOUND')
-          ) {
+          if (this.isNextInternalError(e)) {
             throw e;
           } else {
             return _actionError(serializedData, error(e));
@@ -223,5 +217,18 @@ export class ActionClient {
         }
       }
     };
+  };
+
+  /**
+   * Checks if an error is a Next.js internal error that should be re-thrown.
+   * Next.js internal errors have a `digest` property starting with "NEXT_".
+   */
+  private isNextInternalError = (error: unknown): boolean => {
+    return (
+      error instanceof Error &&
+      'digest' in error &&
+      typeof (error as any).digest === 'string' &&
+      (error as any).digest.startsWith('NEXT_')
+    );
   };
 }
