@@ -6,6 +6,7 @@ import type { ActionResult } from '../index.js';
 import {
   dateToInputDefaultValue,
   getZodValidationAttributes,
+  type ZodValidationAttrs,
 } from './helpers.js';
 
 const FormContext = React.createContext<{
@@ -41,7 +42,7 @@ type UseFieldReturn = {
     autoComplete: 'on' | 'off' | undefined;
     defaultValue?: string;
     defaultChecked?: boolean;
-  };
+  } & Omit<ZodValidationAttrs, 'type'>;
 };
 export const useField = <Schema extends z.ZodObject>(): UseFieldReturn => {
   'use no memo'; // the useField hook should not be memoized because the value will change

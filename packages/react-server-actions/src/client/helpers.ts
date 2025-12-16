@@ -1,6 +1,42 @@
 import { z } from 'zod';
 
 /**
+ * HTML5 validation attributes that can be inferred from a Zod schema
+ */
+export type ZodValidationAttrs = {
+  /** The input type (text, email, url, number, date, checkbox, radio, file) */
+  type?:
+    | 'text'
+    | 'email'
+    | 'url'
+    | 'number'
+    | 'date'
+    | 'checkbox'
+    | 'radio'
+    | 'file';
+  /** Whether the field is required */
+  required?: boolean;
+  /** Minimum length for string inputs */
+  minLength?: number;
+  /** Maximum length for string inputs */
+  maxLength?: number;
+  /** Minimum value for number inputs or minimum date for date inputs */
+  min?: number | string;
+  /** Maximum value for number inputs or maximum date for date inputs */
+  max?: number | string;
+  /** Step value for number inputs */
+  step?: number;
+};
+
+/**
+ * The return type of getZodValidationAttributes
+ */
+export type ZodValidationAttributes = {
+  type: 'string' | 'number' | 'date' | 'boolean' | 'enum' | 'file';
+  attrs: ZodValidationAttrs;
+};
+
+/**
  * Get the html5 validation attributes from a Zod schema field
  * @param schema - The Zod schema
  * @param path - The path to the field in the schema
@@ -16,13 +52,10 @@ export function getZodValidationAttributes(
   options?: {
     inferTypeAttr?: boolean;
   },
-): {
-  type: 'string' | 'number' | 'date' | 'boolean' | 'enum' | 'file';
-  attrs: Record<string, string | number | boolean>;
-} {
+): ZodValidationAttributes {
   let type: 'string' | 'number' | 'date' | 'boolean' | 'enum' | 'file' =
     'string';
-  const attrs: Record<string, string | number | boolean> = {};
+  const attrs: ZodValidationAttrs = {};
 
   // First handle object type to get to the actual field
   if (schema instanceof z.ZodObject && path.length > 0) {
